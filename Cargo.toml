@@ -1,0 +1,6 @@
+[package]
+name = "parcel"
+version = "0.1.0"
+authors = ["Luca Pizzamiglio"]
+
+[dependencies]
