@@ -5,3 +5,4 @@ authors = ["Luca Pizzamiglio"]
 
 [dependencies]
 rusqlite = "0.11.0"
+clap = "2.23.3"
