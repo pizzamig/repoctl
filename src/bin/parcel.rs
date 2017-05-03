@@ -1,14 +1,13 @@
 extern crate clap;
 extern crate walkdir;
+extern crate parcel;
 
 use clap::{Arg, App};
 use std::fs::OpenOptions;
 use std::io::{BufReader, BufRead};
 use walkdir::WalkDir;
-struct Repo {
-	name: String,
-	enabled: bool,
-}
+
+use parcel::repository::*;
 
 fn trim(st: &String) -> String {
 	let mut ret = String::new();
@@ -54,6 +53,10 @@ fn main() {
 				line.clear();
 			}
 			println!("entry: {}", entry );
+			match parse_entry( entry ) {
+				None => println!("Not a valid repo description"),
+				Some(x) => println!("{:#?}",x),
+			};
 		}
 	}
 }
