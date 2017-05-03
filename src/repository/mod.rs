@@ -1,6 +1,7 @@
 use std::fmt;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Repo {
 	name: String,
 	enabled: bool,
@@ -43,7 +44,43 @@ pub fn parse_entry ( entry : String ) -> Option<Repo> {
 			Some(x) => x.to_string(),
 		},
 
-		enabled: is_true_string( entry.split(',').filter(|x| x.contains("enabled")).map(|x| x.split(':').last().unwrap()).last().unwrap().to_string() ),
+		enabled: is_true_string( entry.split(',')
+								.filter(|x| x.contains("enabled"))
+								.map(|x| x.split(':').last().unwrap())
+								.last().unwrap().to_string() ),
 	};
 	Some(r)
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_is_true_string() {
+		assert!(is_true_string( "yes".to_string() ) );
+		assert!(is_true_string( "Yes".to_string() ) );
+		assert!(is_true_string( "YES".to_string() ) );
+		assert!(is_true_string( "true".to_string() ) );
+		assert!(is_true_string( "True".to_string() ) );
+		assert!(is_true_string( "TRUE".to_string() ) );
+
+		assert!(! is_true_string( "no".to_string() ) );
+		assert!(! is_true_string( "No".to_string() ) );
+		assert!(! is_true_string( "NO".to_string() ) );
+		assert!(! is_true_string( "false".to_string() ) );
+		assert!(! is_true_string( "False".to_string() ) );
+		assert!(! is_true_string( "FALSE".to_string() ) );
+
+		assert!(! is_true_string( "TRue".to_string() ) );
+	}
+
+	#[test]
+	fn test_parse_entry_1() {
+		assert_eq!( None, parse_entry( "".to_string() ) );
+		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
+					parse_entry( "FreeBSD:{enabled:yes}".to_string() ) );
+		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
+					parse_entry( "FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string() ) );
+	}
 }
