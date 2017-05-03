@@ -1,3 +1,3 @@
-mod repository;
+pub mod repository;
 
 mod sqldb;
