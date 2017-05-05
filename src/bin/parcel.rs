@@ -4,19 +4,11 @@ extern crate parcel;
 
 use clap::{Arg, App};
 use std::fs::OpenOptions;
-use std::io::{BufReader, BufRead};
+use std::io::BufReader;
 use walkdir::WalkDir;
 
 use parcel::repository::*;
 
-fn trim(st: &String) -> String {
-	let mut ret = String::new();
-	for c in st.chars().filter( |&c| !c.is_whitespace()) {
-		if c == '#' { return ret; }
-		ret.push( c );
-	}
-	ret
-}
 
 fn main() {
 	let matches = App::new("parcel - rust'ed pkg")
@@ -43,17 +35,9 @@ fn main() {
 				Err(_) => continue,
 				Ok(f) => f,
 			};
-			let mut buf_reader = BufReader::new( f );
-			let mut line = String::new();
-			let mut entry = String::new();
-			println!("file {}", repofile.path().display() );
-			while buf_reader.read_line( &mut line ).unwrap() > 0 {
-				//println!("read {} lines", line.len());
-				entry += &(trim(&line));
-				line.clear();
-			}
-			println!("entry: {}", entry );
-			match parse_entry( entry ) {
+
+			let buf_reader = &mut BufReader::new( f );
+			match parse_file( buf_reader ) {
 				None => println!("Not a valid repo description"),
 				Some(x) => println!("{:#?}",x),
 			};
