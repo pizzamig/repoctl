@@ -1,5 +1,5 @@
 extern crate parcel;
 
 #[test]
-fn it_works() {
+fn test_pkg_info() {
 }
