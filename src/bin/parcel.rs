@@ -16,6 +16,7 @@ fn main() {
 	let matches = App::from_yaml(yaml).get_matches();
 
 	if matches.is_present("repositories") {
+		let mut repos: Vec<Repo> = Vec::new();
 		for repofile in WalkDir::new("/etc/pkg")
 			.into_iter()
 			.filter_map( |e| e.ok())
@@ -31,10 +32,12 @@ fn main() {
 			};
 
 			let buf_reader = &mut BufReader::new( f );
-			match parse_file( buf_reader ) {
-				None => println!("Not a valid repo description"),
-				Some(x) => println!("{:#?}",x),
-			};
+			if let Some(x) = parse_file( buf_reader ) {
+				println!("{:#?}",x);
+				merge_repo( &mut repos, x )
+			} else {
+				println!("Not a valid repo description");
+			}
 		}
 	}
 }
