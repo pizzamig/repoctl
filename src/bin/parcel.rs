@@ -39,5 +39,27 @@ fn main() {
 				println!("Not a valid repo description");
 			}
 		}
+		for repofile in WalkDir::new("/usr/local/etc/pkg/repos")
+			.into_iter()
+			.filter_map( |e| e.ok())
+			.filter( |e| e.file_type().is_file())
+			.filter( |e| e.path().extension().unwrap_or( std::ffi::OsStr::new("")) == "conf" ) {
+			let f = match OpenOptions::new()
+				.read( true )
+				.write( false )
+				.create( false )
+				.open( repofile.path() ) {
+				Err(_) => continue,
+				Ok(f) => f,
+			};
+
+			let buf_reader = &mut BufReader::new( f );
+			if let Some(x) = parse_file( buf_reader ) {
+				println!("{:#?}",x);
+				merge_repo( &mut repos, x )
+			} else {
+				println!("Not a valid repo description");
+			}
+		}
 	}
 }
