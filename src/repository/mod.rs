@@ -6,8 +6,8 @@ use std::convert::From;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub struct Repo {
-	name: String,
-	enabled: bool,
+	pub name: String,
+	pub enabled: bool,
 }
 
 impl fmt::Display for Repo {

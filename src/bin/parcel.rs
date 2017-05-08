@@ -32,11 +32,8 @@ fn main() {
 			};
 
 			let buf_reader = &mut BufReader::new( f );
-			if let Some(x) = parse_file( buf_reader ) {
-				println!("{:#?}",x);
-				merge_repo( &mut repos, x )
-			} else {
-				println!("Not a valid repo description");
+			for v in multi_parse_file( buf_reader ) {
+				merge_repo( &mut repos, v );
 			}
 		}
 		for repofile in WalkDir::new("/usr/local/etc/pkg/repos")
@@ -59,5 +56,9 @@ fn main() {
 			}
 		}
 		println!("{:?}", repos);
+		println!("Enabled repos:");
+		for r in repos.iter().filter(|x| x.enabled) {
+			println!("repo: {}", r.name);
+		}
 	}
 }
