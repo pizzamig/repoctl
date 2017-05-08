@@ -26,7 +26,7 @@ fn is_true_string( s : String ) -> bool {
 	false
 }
 
-fn trim( st: &str ) -> String {
+fn line_trim( st: &str ) -> String {
 	let mut ret = String::new();
 	for c in st.chars().filter( |&c| !c.is_whitespace()) {
 		if c == '#' { return ret }
@@ -35,8 +35,38 @@ fn trim( st: &str ) -> String {
 	ret
 }
 
+/// Parse a string, without spaces and lines, containing exactly one repo description
+fn parse_line_string ( entry: String ) -> Option<Repo> {
+	let idx_desc_start = match entry.find('{') {
+		None => return None,
+		Some(x) => x
+	};
+	let idx_desc_stop = match entry.find('}') {
+		None => return None,
+		Some(x) => x
+	};
+	let idx_first_colon = match entry.find(':') {
+		None => return None,
+		Some(x) => x
+	};
+	if idx_first_colon > idx_desc_start { return None; }
+	if idx_desc_stop < idx_desc_start { return None; }
+	let r = Repo {
+		name: match entry.splitn(2,':').nth(0) {
+			None => "".to_string(),
+			Some(x) => x.to_string(),
+		},
+
+		enabled: is_true_string( entry.split(',')
+								.filter(|x| x.contains("enabled"))
+								.map(|x| x.split(':').last().unwrap_or(""))
+								.last().unwrap_or("").to_string() ),
+	};
+	Some(r)
+}
+
 pub fn parse_string( entry : String ) -> Option<Repo> {
-	let trimmed = entry.lines().map( |x| trim(x)).fold( "".to_string(), |acc, x| acc + &x);
+	let trimmed = entry.lines().map( |x| line_trim(x)).fold( "".to_string(), |acc, x| acc + &x);
 	let idx_desc_start = match trimmed.find('{') {
 		None => return None,
 		Some(x) => x
@@ -74,6 +104,25 @@ pub fn parse_file( bf : &mut BufReader<File> ) -> Option<Repo> {
 		line.clear();
 	}
 	parse_string( entry )
+}
+
+pub fn multi_parse_file( bf : &mut BufReader<File> ) -> Vec<Repo> {
+	let mut line = String::new();
+	let mut entry = String::new();
+	let mut v : Vec<Repo> = Vec::new();
+	while let Ok(x) = bf.read_line( &mut line ) {
+		if x == 0 { break; }
+		entry += &line;
+		line.clear();
+		if entry.find('}').is_some() {
+			let to_parse = entry.clone();
+			if let Some(x) = parse_string( to_parse ) {
+				v.push(x);
+				entry.clear();
+			}
+		}
+	}
+	v
 }
 
 impl From<String> for Repo {
@@ -124,10 +173,27 @@ mod tests {
 	}
 
 	#[test]
-	fn test_trim() {
-		assert_eq!( "asdf", trim( &(" asdf #asdf ") ) );
-		assert_eq!( "", trim( &(" # asdf # ##  ") ) );
-		assert_eq!( "asdf:asdf", trim( &("asdf : asdf#asdfasdf ") ) );
+	fn test_line_trim() {
+		assert_eq!( "asdf", line_trim( &(" asdf #asdf ") ) );
+		assert_eq!( "", line_trim( &(" # asdf # ##  ") ) );
+		assert_eq!( "asdf:asdf", line_trim( &("asdf : asdf#asdfasdf ") ) );
+	}
+
+	#[test]
+	fn test_parse_line_string_1() {
+		assert_eq!( None, parse_line_string( "".to_string() ) );
+		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
+					parse_line_string( "FreeBSD:{enabled:yes}".to_string() ) );
+		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
+					parse_line_string( "FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string() ) );
+		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: false } ),
+					parse_line_string( "FreeBSD:{enabled:,url:\"http://pkg.bsd\"}".to_string() ) );
+	}
+	#[test]
+	#[should_panic]
+	fn test_parse_line_string_2() {
+		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: false } ),
+					parse_line_string( "#\nFreeBSD:{\nenabled:,url:\"http://pkg.bsd\"}".to_string() ) );
 	}
 
 	#[test]
