@@ -1,0 +1,11 @@
+name: parcel
+version: "0.1.0"
+author: Luca Pizzamiglio <luca.pizzamiglio@gmail.com>
+about: FreeBSD pkg companion
+
+args:
+    - repositories:
+        short: R
+        long: repositories
+        help: Checks the repositories configuration
+        takes_value: false

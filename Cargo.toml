@@ -5,5 +5,5 @@ authors = ["Luca Pizzamiglio"]
 
 [dependencies]
 rusqlite = "0.11.0"
-clap = "2.23.3"
+clap = { version = "2.23.3", features = ["yaml"] }
 walkdir = "1"

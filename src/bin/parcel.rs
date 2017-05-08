@@ -1,32 +1,26 @@
+#[macro_use]
 extern crate clap;
 extern crate walkdir;
 extern crate parcel;
 
-use clap::{Arg, App};
+use clap::App;
 use std::fs::OpenOptions;
 use std::io::BufReader;
 use walkdir::WalkDir;
 
 use parcel::repository::*;
 
-
 fn main() {
-	let matches = App::new("parcel - rust'ed pkg")
-		.version("0.1.0")
-		.author("Luca Pizzamiglio <luca.pizzamiglio@gmail.com>")
-		.arg(Arg::with_name("repositories")
-			.short("R")
-			.long("repositories")
-			.help("It checks the repository configuration")
-			.takes_value(false))
-		.get_matches();
+	// Loading the arguments description & parse it
+	let yaml = load_yaml!("parcel.yml");
+	let matches = App::from_yaml(yaml).get_matches();
 
 	if matches.is_present("repositories") {
 		for repofile in WalkDir::new("/etc/pkg")
 			.into_iter()
 			.filter_map( |e| e.ok())
 			.filter( |e| e.file_type().is_file())
-			.filter( |e| e.path().extension().unwrap() == "conf" ) {
+			.filter( |e| e.path().extension().unwrap_or( std::ffi::OsStr::new("")) == "conf" ) {
 			let f = match OpenOptions::new()
 				.read( true )
 				.write( false )
