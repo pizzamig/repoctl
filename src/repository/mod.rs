@@ -35,36 +35,7 @@ fn line_trim( st: &str ) -> String {
 	ret
 }
 
-/// Parse a string, without spaces and lines, containing exactly one repo description
-fn parse_line_string ( entry: String ) -> Option<Repo> {
-	let idx_desc_start = match entry.find('{') {
-		None => return None,
-		Some(x) => x
-	};
-	let idx_desc_stop = match entry.find('}') {
-		None => return None,
-		Some(x) => x
-	};
-	let idx_first_colon = match entry.find(':') {
-		None => return None,
-		Some(x) => x
-	};
-	if idx_first_colon > idx_desc_start { return None; }
-	if idx_desc_stop < idx_desc_start { return None; }
-	let r = Repo {
-		name: match entry.splitn(2,':').nth(0) {
-			None => "".to_string(),
-			Some(x) => x.to_string(),
-		},
-
-		enabled: is_true_string( entry.split(',')
-								.filter(|x| x.contains("enabled"))
-								.map(|x| x.split(':').last().unwrap_or(""))
-								.last().unwrap_or("").to_string() ),
-	};
-	Some(r)
-}
-
+/// Parse a string, containing only one repo description
 pub fn parse_string( entry : String ) -> Option<Repo> {
 	let trimmed = entry.lines().map( |x| line_trim(x)).fold( "".to_string(), |acc, x| acc + &x);
 	let idx_desc_start = match trimmed.find('{') {
@@ -125,6 +96,7 @@ pub fn multi_parse_file( bf : &mut BufReader<File> ) -> Vec<Repo> {
 	v
 }
 
+/// Parse a string, containing only one repo description
 impl From<String> for Repo {
 	fn from( s: String) -> Repo {
 		match parse_string( s ) {
@@ -180,23 +152,6 @@ mod tests {
 	}
 
 	#[test]
-	fn test_parse_line_string_1() {
-		assert_eq!( None, parse_line_string( "".to_string() ) );
-		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
-					parse_line_string( "FreeBSD:{enabled:yes}".to_string() ) );
-		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
-					parse_line_string( "FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string() ) );
-		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: false } ),
-					parse_line_string( "FreeBSD:{enabled:,url:\"http://pkg.bsd\"}".to_string() ) );
-	}
-	#[test]
-	#[should_panic]
-	fn test_parse_line_string_2() {
-		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: false } ),
-					parse_line_string( "#\nFreeBSD:{\nenabled:,url:\"http://pkg.bsd\"}".to_string() ) );
-	}
-
-	#[test]
 	fn test_parse_string_1() {
 		assert_eq!( None, parse_string( "".to_string() ) );
 		assert_eq!( Some( Repo { name: "FreeBSD".to_string(), enabled: true } ),
@@ -221,6 +176,21 @@ mod tests {
 					Repo::from( "FreeBSD:{enabled:,url:\"http://pkg.bsd\"}".to_string() ) );
 		assert_eq!( Repo { name: "FreeBSD".to_string(), enabled: false },
 					Repo::from( "#\nFreeBSD:{\nenabled:,url:\"http://pkg.bsd\"}".to_string() ) );
+	}
+
+	#[test]
+	fn test_merge_repo_1() {
+		let mut repos: Vec<Repo> = Vec::new();
+		let fb = "FreeBSD".to_string();
+		merge_repo( &mut repos, Repo { name: fb.clone(), enabled: true } );
+		assert_eq!( repos[0], Repo { name: fb.clone(), enabled: true } );
+
+		merge_repo( &mut repos, Repo { name: fb.clone(), enabled: false } );
+		assert_eq!( repos[0], Repo { name: fb.clone(), enabled: false } );
+
+		merge_repo( &mut repos, Repo { name: "drmnext".to_string(), enabled: true } );
+		assert_eq!( repos[0], Repo { name: fb.clone(), enabled: false } );
+		assert_eq!( repos[1], Repo { name: "drmnext".to_string(), enabled: true } );
 	}
 }
 
