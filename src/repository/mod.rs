@@ -89,6 +89,16 @@ impl From<String> for Repo {
 	}
 }
 
+pub fn merge_repo( v: &mut Vec<Repo>, r: Repo ) {
+	if v.iter().any( |z| z.name == r.name ) {
+		if let Some(x) = v.iter_mut().find( |x| x.name == r.name ) {
+			x.enabled = r.enabled;
+		}
+	} else {
+		v.push(r);
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
