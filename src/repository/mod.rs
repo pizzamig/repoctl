@@ -123,7 +123,9 @@ pub fn merge_repo( v: &mut Vec<Repo>, r: Repo ) {
 	if v.iter().any( |z| z.name == r.name ) {
 		if let Some(x) = v.iter_mut().find( |x| x.name == r.name ) {
 			x.enabled = r.enabled;
-			x.url = r.url;
+			if ! r.url.is_empty() {
+				x.url = r.url;
+			}
 		}
 	} else {
 		v.push(r);
@@ -212,6 +214,10 @@ mod tests {
 		merge_repo( &mut repos, Repo { name: "drmnext".to_string(), url: u.clone(), enabled: true } );
 		assert_eq!( repos[0], Repo { name: fb.clone(), url: u2.clone(), enabled: false } );
 		assert_eq!( repos[1], Repo { name: "drmnext".to_string(), url: u.clone(), enabled: true } );
+
+		merge_repo( &mut repos, Repo { name: "drmnext".to_string(), url: "".to_string(), enabled: false } );
+		assert_eq!( repos[0], Repo { name: fb.clone(), url: u2.clone(), enabled: false } );
+		assert_eq!( repos[1], Repo { name: "drmnext".to_string(), url: u.clone(), enabled: false } );
 	}
 }
 
