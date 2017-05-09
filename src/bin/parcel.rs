@@ -43,6 +43,7 @@ fn main() {
 		println!("Enabled repos:");
 		for r in repos.iter().filter(|x| x.enabled) {
 			println!("repo: {}", r.name);
+			println!("url: {}", r.url);
 		}
 	}
 }
