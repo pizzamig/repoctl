@@ -13,3 +13,8 @@ args:
         long: repositories
         help: Checks the repositories configuration
         takes_value: false
+    - verbose:
+        short: v
+        long: verbose
+        help: Increment output verbosity
+        multiple: true
