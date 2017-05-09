@@ -120,12 +120,10 @@ impl From<String> for Repo {
 }
 
 pub fn merge_repo( v: &mut Vec<Repo>, r: Repo ) {
-	if v.iter().any( |z| z.name == r.name ) {
-		if let Some(x) = v.iter_mut().find( |x| x.name == r.name ) {
-			x.enabled = r.enabled;
-			if ! r.url.is_empty() {
-				x.url = r.url;
-			}
+	if let Some(x) = v.iter().position( |z| z.name == r.name ) {
+		v[x].enabled = r.enabled;
+		if ! r.url.is_empty() {
+			v[x].url = r.url;
 		}
 	} else {
 		v.push(r);
