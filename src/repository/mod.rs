@@ -7,6 +7,7 @@ use std::convert::From;
 #[derive(PartialEq)]
 pub struct Repo {
 	pub name: String,
+	//pub url: String,
 	pub enabled: bool,
 }
 
@@ -57,11 +58,18 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 			None => "".to_string(),
 			Some(x) => x.to_string(),
 		},
-
-		enabled: is_true_string( trimmed.split(',')
-								.filter(|x| x.contains("enabled"))
-								.map(|x| x.split(':').last().unwrap_or(""))
-								.last().unwrap_or("").to_string() ),
+//		url: trimmed.split(',')
+//				.filter(|x| x.contains("url:"))
+//				.map(|x| x.split(':').last().unwrap_or(""))
+//				.last().unwrap_or("").to_string() 
+//		,
+		enabled: match trimmed.split(',')
+						.filter(|x| x.contains("enabled:"))
+						.map(|x| x.split(':').last().unwrap_or(""))
+						.last() {
+				Some(x) => is_true_string(x.to_string()),
+				None => false,
+		}
 	};
 	Some(r)
 }
