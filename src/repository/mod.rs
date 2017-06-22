@@ -38,7 +38,7 @@ fn line_trim( st: &str ) -> String {
 
 /// Parse a string, containing only one repo description
 pub fn parse_string( entry : String ) -> Option<Repo> {
-	let trimmed = entry.lines().map( |x| line_trim(x)).fold( "".to_string(), |acc, x| acc + &x);
+	let trimmed = entry.lines().map(line_trim).fold( "".to_string(), |acc, x| acc + &x);
 	let idx_desc_start = match trimmed.find('{') {
 		None => return None,
 		Some(x) => x
