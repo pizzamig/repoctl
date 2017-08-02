@@ -1,3 +1,4 @@
+extern crate ucl;
 use std::fmt;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
@@ -72,6 +73,27 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 		}
 	};
 	Some(r)
+}
+
+pub fn parse_file_ucl( bf : &mut BufReader<File> ) -> Option<Repo> {
+	let mut line = String::new();
+	let mut stringfile = String::new();
+	while let Ok(x) = bf.read_line( &mut line ) {
+		if x == 0 { break; }
+		stringfile += &line;
+		line.clear();
+	}
+	let parser = ucl::Parser::new();
+	let document = parser.parse(&stringfile);
+	if let Ok(i) = document {
+		Some( Repo {
+			name: "".to_string(),
+			url: "".to_string(),
+			enabled: false
+		})
+	} else {
+		None
+	}
 }
 
 pub fn parse_file( bf : &mut BufReader<File> ) -> Option<Repo> {
