@@ -6,4 +6,4 @@ authors = ["Luca Pizzamiglio"]
 [dependencies]
 clap = { version = "2.26.0", features = ["yaml"] }
 walkdir = "1.0.7"
-ucl = "0.1.4"
+ucl = { git = "https://github.com/pizzamig/ucl-rs" }
