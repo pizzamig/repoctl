@@ -84,8 +84,7 @@ pub fn parse_file_ucl( bf : &mut BufReader<File> ) -> Option<Repo> {
 		line.clear();
 	}
 	let parser = ucl::Parser::new();
-	let document = parser.parse(&stringfile);
-	if let Ok(i) = document {
+	if let Ok(i) = parser.parse(stringfile) {
 		Some( Repo {
 			name: "".to_string(),
 			url: "".to_string(),
@@ -238,6 +237,18 @@ mod tests {
 		merge_repo( &mut repos, Repo { name: "drmnext".to_string(), url: "".to_string(), enabled: false } );
 		assert_eq!( repos[0], Repo { name: fb.clone(), url: u2.clone(), enabled: false } );
 		assert_eq!( repos[1], Repo { name: "drmnext".to_string(), url: u.clone(), enabled: false } );
+	}
+
+	#[test]
+	fn test_ucl() {
+		let parsy = ucl::Parser::new();
+		let doc = parsy.parse("FreeBSD: {enabled: yes}").unwrap();
+		assert_eq!( doc.get_type(), ucl::object::types::Type::Object);
+		let obj = doc.fetch("FreeBSD").unwrap();
+		assert_eq!(obj.get_type(), ucl::object::types::Type::Object);
+		let obj2 = obj.fetch("enabled").unwrap();
+		assert_eq!(obj2.get_type(), ucl::object::types::Type::Boolean);
+		assert_eq!(obj2.as_bool(), Some(true) );
 	}
 }
 
