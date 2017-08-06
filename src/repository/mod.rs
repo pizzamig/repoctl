@@ -37,9 +37,26 @@ fn line_trim( st: &str ) -> String {
 	ret
 }
 
+/// Input has to be already trimmed
+fn get_section_name( st: &str ) -> Option<String> {
+	let idx_desc_start = match st.find('{') {
+		None => return None,
+		Some(x) => x
+	};
+	let idx_first_colon = match st.find(':') {
+		None => return None,
+		Some(x) => x
+	};
+	if idx_first_colon > idx_desc_start { return None; }
+	match st.splitn(2,':').nth(0) {
+		None => None,
+		Some(x) => Some(x.to_string()),
+	}
+}
+
 /// Parse a string, containing only one repo description
 pub fn parse_string( entry : String ) -> Option<Repo> {
-	let trimmed = entry.lines().map(line_trim).fold( "".to_string(), |acc, x| acc + &x);
+	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
 	let idx_desc_start = match trimmed.find('{') {
 		None => return None,
 		Some(x) => x
@@ -75,6 +92,33 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 	Some(r)
 }
 
+pub fn parse_string_ucl( entry : String ) -> Option<Repo> {
+	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
+	let mut r: Repo = Repo {name: String::new(), url: String::new(), enabled: false };
+	if let Some(name) = get_section_name( trimmed.as_ref() ) {
+		r.name = name;
+	} else {
+		return None;
+	}
+	let parsy = ucl::Parser::new();
+	if let Ok(config) = parsy.parse(trimmed) {
+		let url_path = r.name.clone() + ".url";
+		if let Some(url_obj) = config.fetch_path(url_path) {
+			if let Some(url) = url_obj.as_string() {
+				r.url = url;
+			}
+		}
+		if let Some(enabled_obj) = config.fetch_path(r.name.clone() + ".enabled") {
+			if let Some(enabled) = enabled_obj.as_bool() {
+				r.enabled = enabled;
+			}
+		}
+		Some(r)
+	} else {
+		None
+	}
+}
+
 pub fn parse_file_ucl( bf : &mut BufReader<File> ) -> Option<Repo> {
 	let mut line = String::new();
 	let mut stringfile = String::new();
@@ -84,7 +128,7 @@ pub fn parse_file_ucl( bf : &mut BufReader<File> ) -> Option<Repo> {
 		line.clear();
 	}
 	let parser = ucl::Parser::new();
-	if let Ok(i) = parser.parse(stringfile) {
+	if let Ok(_) = parser.parse(stringfile) {
 		Some( Repo {
 			name: "".to_string(),
 			url: "".to_string(),
@@ -180,6 +224,14 @@ mod tests {
 		assert_eq!( "asdf", line_trim( &(" asdf #asdf ") ) );
 		assert_eq!( "", line_trim( &(" # asdf # ##  ") ) );
 		assert_eq!( "asdf:asdf", line_trim( &("asdf : asdf#asdfasdf ") ) );
+		assert_eq!( "asdf:asdf", line_trim( &("asdf :	asdf#asdfasdf ") ) );
+	}
+
+	#[test]
+	fn test_get_section_name() {
+		let desc1 = "FreeBSD : { enabled: yes }";
+		let rc1 = get_section_name( line_trim(desc1).as_ref() );
+		assert_eq!(rc1, Some(String::from("FreeBSD")));
 	}
 
 	#[test]
