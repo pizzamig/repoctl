@@ -55,7 +55,7 @@ fn get_section_name( st: &str ) -> Option<String> {
 }
 
 /// Parse a string, containing only one repo description
-pub fn parse_string( entry : String ) -> Option<Repo> {
+pub fn parse_string_legacy( entry : String ) -> Option<Repo> {
 	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
 	let idx_desc_start = match trimmed.find('{') {
 		None => return None,
@@ -92,7 +92,7 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 	Some(r)
 }
 
-pub fn parse_string_ucl( entry : String ) -> Option<Repo> {
+pub fn parse_string( entry : String ) -> Option<Repo> {
 	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
 	let mut r: Repo = Repo {name: String::new(), url: String::new(), enabled: false };
 	if let Some(name) = get_section_name( trimmed.as_ref() ) {
@@ -235,7 +235,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_parse_string_1() {
+	fn test_parse_string() {
 		let ft: Repo = Repo { name: "FreeBSD".to_string(), url: "".to_string(), enabled: true };
 		let fut: Repo = Repo { name: "FreeBSD".to_string(), url: "http://pkg.bsd".to_string(), enabled: true };
 		let ff: Repo = Repo { name: "FreeBSD".to_string(), url: "".to_string(), enabled: false };
@@ -249,9 +249,9 @@ mod tests {
 		assert_eq!( Some( fut ),
 					parse_string( "FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string() ) );
 		assert_eq!( Some( fuf ),
-					parse_string( "FreeBSD:{enabled:,url:\"http://pkg.bsd\"}".to_string() ) );
+					parse_string( "FreeBSD:{url:\"http://pkg.bsd\"}".to_string() ) );
 		assert_eq!( Some( fuf2 ),
-					parse_string( "#\nFreeBSD:{\nenabled:,url:\"http://pkg.bsd\"}".to_string() ) );
+					parse_string( "#\nFreeBSD:{\nenabled:NO,url:\"http://pkg.bsd\"}".to_string() ) );
 	}
 
 	#[test]
@@ -266,8 +266,8 @@ mod tests {
 		assert_eq!( ff, Repo::from( "FreeBSD:{}".to_string() ) );
 		assert_eq!( ft, Repo::from( "FreeBSD:{enabled:yes}".to_string() ) );
 		assert_eq!( fut, Repo::from( "FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string() ) );
-		assert_eq!( fuf, Repo::from( "FreeBSD:{enabled:,url:\"http://pkg.bsd\"}".to_string() ) );
-		assert_eq!( fuf2, Repo::from( "#\nFreeBSD:{\nenabled:,url:\"http://pkg.bsd\"}".to_string() ) );
+		assert_eq!( fuf, Repo::from( "FreeBSD:{enabled:false,url:\"http://pkg.bsd\"}".to_string() ) );
+		assert_eq!( fuf2, Repo::from( "#\nFreeBSD:{\nenabled:no,url:\"http://pkg.bsd\"}".to_string() ) );
 	}
 
 	#[test]
