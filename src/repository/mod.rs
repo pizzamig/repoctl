@@ -18,15 +18,15 @@ impl fmt::Display for Repo {
 	}
 }
 
-fn is_true_string( s : String ) -> bool {
-	if s.starts_with( "yes" ) { return true; }
-	if s.starts_with( "YES" ) { return true; }
-	if s.starts_with( "Yes" ) { return true; }
-	if s.starts_with( "true" ) { return true; }
-	if s.starts_with( "TRUE" ) { return true; }
-	if s.starts_with( "True" ) { return true; }
-	false
-}
+//fn is_true_string( s : String ) -> bool {
+//	if s.starts_with( "yes" ) { return true; }
+//	if s.starts_with( "YES" ) { return true; }
+//	if s.starts_with( "Yes" ) { return true; }
+//	if s.starts_with( "true" ) { return true; }
+//	if s.starts_with( "TRUE" ) { return true; }
+//	if s.starts_with( "True" ) { return true; }
+//	false
+//}
 
 fn line_trim( st: &str ) -> String {
 	let mut ret = String::new();
@@ -55,42 +55,42 @@ fn get_section_name( st: &str ) -> Option<String> {
 }
 
 /// Parse a string, containing only one repo description
-pub fn parse_string_legacy( entry : String ) -> Option<Repo> {
-	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
-	let idx_desc_start = match trimmed.find('{') {
-		None => return None,
-		Some(x) => x
-	};
-	let idx_desc_stop = match trimmed.find('}') {
-		None => return None,
-		Some(x) => x
-	};
-	let idx_first_colon = match trimmed.find(':') {
-		None => return None,
-		Some(x) => x
-	};
-	if idx_first_colon > idx_desc_start { return None; }
-	if idx_desc_stop < idx_desc_start { return None; }
-	let r = Repo {
-		name: match trimmed.splitn(2,':').nth(0) {
-			None => "".to_string(),
-			Some(x) => x.to_string(),
-		},
-		url: trimmed.split(',')
-				.filter(|x| x.contains("url:"))
-				.map(|x| x.split('"').nth(1).unwrap_or(""))
-				.last().unwrap_or("").to_string()
-		,
-		enabled: match trimmed.split(',')
-						.filter(|x| x.contains("enabled:"))
-						.map(|x| x.split(':').last().unwrap_or(""))
-						.last() {
-				Some(x) => is_true_string(x.to_string()),
-				None => false,
-		}
-	};
-	Some(r)
-}
+//pub fn parse_string_legacy( entry : String ) -> Option<Repo> {
+//	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
+//	let idx_desc_start = match trimmed.find('{') {
+//		None => return None,
+//		Some(x) => x
+//	};
+//	let idx_desc_stop = match trimmed.find('}') {
+//		None => return None,
+//		Some(x) => x
+//	};
+//	let idx_first_colon = match trimmed.find(':') {
+//		None => return None,
+//		Some(x) => x
+//	};
+//	if idx_first_colon > idx_desc_start { return None; }
+//	if idx_desc_stop < idx_desc_start { return None; }
+//	let r = Repo {
+//		name: match trimmed.splitn(2,':').nth(0) {
+//			None => "".to_string(),
+//			Some(x) => x.to_string(),
+//		},
+//		url: trimmed.split(',')
+//				.filter(|x| x.contains("url:"))
+//				.map(|x| x.split('"').nth(1).unwrap_or(""))
+//				.last().unwrap_or("").to_string()
+//		,
+//		enabled: match trimmed.split(',')
+//						.filter(|x| x.contains("enabled:"))
+//						.map(|x| x.split(':').last().unwrap_or(""))
+//						.last() {
+//				Some(x) => is_true_string(x.to_string()),
+//				None => false,
+//		}
+//	};
+//	Some(r)
+//}
 
 pub fn parse_string( entry : String ) -> Option<Repo> {
 	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
@@ -199,25 +199,25 @@ pub fn merge_repo( v: &mut Vec<Repo>, r: Repo ) {
 mod tests {
 	use super::*;
 
-	#[test]
-	fn test_is_true_string() {
-		assert!(is_true_string( "yes".to_string() ) );
-		assert!(is_true_string( "Yes".to_string() ) );
-		assert!(is_true_string( "YES".to_string() ) );
-		assert!(is_true_string( "true".to_string() ) );
-		assert!(is_true_string( "True".to_string() ) );
-		assert!(is_true_string( "TRUE".to_string() ) );
-
-		assert!(! is_true_string( "no".to_string() ) );
-		assert!(! is_true_string( "No".to_string() ) );
-		assert!(! is_true_string( "NO".to_string() ) );
-		assert!(! is_true_string( "false".to_string() ) );
-		assert!(! is_true_string( "False".to_string() ) );
-		assert!(! is_true_string( "FALSE".to_string() ) );
-
-		assert!(! is_true_string( "TRue".to_string() ) );
-		assert!(! is_true_string( "".to_string() ) );
-	}
+//	#[test]
+//	fn test_is_true_string() {
+//		assert!(is_true_string( "yes".to_string() ) );
+//		assert!(is_true_string( "Yes".to_string() ) );
+//		assert!(is_true_string( "YES".to_string() ) );
+//		assert!(is_true_string( "true".to_string() ) );
+//		assert!(is_true_string( "True".to_string() ) );
+//		assert!(is_true_string( "TRUE".to_string() ) );
+//
+//		assert!(! is_true_string( "no".to_string() ) );
+//		assert!(! is_true_string( "No".to_string() ) );
+//		assert!(! is_true_string( "NO".to_string() ) );
+//		assert!(! is_true_string( "false".to_string() ) );
+//		assert!(! is_true_string( "False".to_string() ) );
+//		assert!(! is_true_string( "FALSE".to_string() ) );
+//
+//		assert!(! is_true_string( "TRue".to_string() ) );
+//		assert!(! is_true_string( "".to_string() ) );
+//	}
 
 	#[test]
 	fn test_line_trim() {
