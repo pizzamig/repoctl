@@ -59,7 +59,7 @@ fn get_section_name( st: &str ) -> Option<String> {
 /// it parses one repository description
 pub fn parse_string( entry : String ) -> Option<Repo> {
 	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
-	let mut r: Repo = Repo {name: String::new(), url: String::new(), enabled: false };
+	let mut r = Repo::new();
 	if let Some(name) = get_section_name( trimmed.as_ref() ) {
 		r.name = name;
 	} else {
@@ -82,17 +82,6 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 	} else {
 		None
 	}
-}
-
-pub fn parse_file( bf : &mut BufReader<File> ) -> Option<Repo> {
-	let mut line = String::new();
-	let mut entry = String::new();
-	while let Ok(x) = bf.read_line( &mut line ) {
-		if x == 0 { break; }
-		entry += &line;
-		line.clear();
-	}
-	parse_string( entry )
 }
 
 pub fn multi_parse_file( bf : &mut BufReader<File> ) -> Vec<Repo> {
@@ -134,12 +123,7 @@ impl From<String> for Repo {
 	fn from( s: String) -> Repo {
 		match parse_string( s ) {
 			Some(x) => x,
-			None =>
-				Repo {
-					name: "".to_string(),
-					url: "".to_string(),
-					enabled: false
-				}
+			None => Repo::new(),
 		}
 	}
 }
@@ -209,8 +193,7 @@ mod tests {
 		let ff: Repo = Repo { name: "FreeBSD".to_string(), url: "".to_string(), enabled: false };
 		let fuf: Repo = Repo { name: "FreeBSD".to_string(), url: "http://pkg.bsd".to_string(), enabled: false };
 		let fuf2: Repo = Repo { name: "FreeBSD".to_string(), url: "http://pkg.bsd".to_string(), enabled: false };
-		assert_eq!( Repo { name: "".to_string(), url: "".to_string(), enabled: false},
-					Repo::from( "".to_string() ) );
+		assert_eq!( Repo::new(), Repo::from( String::new() ) );
 		assert_eq!( ff, Repo::from( "FreeBSD:{}".to_string() ) );
 		assert_eq!( ft, Repo::from( "FreeBSD:{enabled:yes}".to_string() ) );
 		assert_eq!( fut, Repo::from( "FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string() ) );
