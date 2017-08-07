@@ -1,8 +1,9 @@
 extern crate ucl;
 use std::fmt;
 use std::io::{BufReader, BufRead};
-use std::fs::File;
 use std::convert::From;
+use std::path::Path;
+use std::fs::{File, OpenOptions};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -28,6 +29,7 @@ impl fmt::Display for Repo {
 //	false
 //}
 
+/// internal function that clean up a line, removing comments and whitespaces
 fn line_trim( st: &str ) -> String {
 	let mut ret = String::new();
 	for c in st.chars().filter( |&c| !c.is_whitespace()) {
@@ -92,6 +94,7 @@ fn get_section_name( st: &str ) -> Option<String> {
 //	Some(r)
 //}
 
+/// it parses one repository description
 pub fn parse_string( entry : String ) -> Option<Repo> {
 	let trimmed = entry.lines().map(line_trim).fold( String::new(), |acc, x| acc + &x);
 	let mut r: Repo = Repo {name: String::new(), url: String::new(), enabled: false };
@@ -119,26 +122,6 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 	}
 }
 
-pub fn parse_file_ucl( bf : &mut BufReader<File> ) -> Option<Repo> {
-	let mut line = String::new();
-	let mut stringfile = String::new();
-	while let Ok(x) = bf.read_line( &mut line ) {
-		if x == 0 { break; }
-		stringfile += &line;
-		line.clear();
-	}
-	let parser = ucl::Parser::new();
-	if let Ok(_) = parser.parse(stringfile) {
-		Some( Repo {
-			name: "".to_string(),
-			url: "".to_string(),
-			enabled: false
-		})
-	} else {
-		None
-	}
-}
-
 pub fn parse_file( bf : &mut BufReader<File> ) -> Option<Repo> {
 	let mut line = String::new();
 	let mut entry = String::new();
@@ -161,12 +144,27 @@ pub fn multi_parse_file( bf : &mut BufReader<File> ) -> Vec<Repo> {
 		if entry.find('}').is_some() {
 			let to_parse = entry.clone();
 			if let Some(x) = parse_string( to_parse ) {
-				v.push(x);
+				merge_repo(&mut v, x);
 				entry.clear();
 			}
 		}
 	}
 	v
+}
+
+pub fn multi_parse_filename( filename: &Path ) -> Vec<Repo> {
+	let mut repos : Vec<Repo> = Vec::new();
+	if let Ok(f) = OpenOptions::new()
+		.read( true )
+		.write( false )
+		.create( false )
+		.open( filename ) {
+		let buf_reader = &mut BufReader::new( f );
+		for v in multi_parse_file( buf_reader ) {
+			merge_repo( &mut repos, v );
+		}
+	}
+	repos
 }
 
 /// Parse a string, containing only one repo description
