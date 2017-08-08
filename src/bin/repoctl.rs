@@ -12,10 +12,11 @@ fn main() {
 	let yaml = load_yaml!("repoctl.yml");
 	let matches = App::from_yaml(yaml).get_matches();
 
-	let verbosity = matches.occurrences_of("verbose");
+	let mut verbosity = matches.occurrences_of("verbose");
 
 	match matches.subcommand() {
-		("show",_) => {
+		("show",Some(show_matches)) => {
+			verbosity += show_matches.occurrences_of("verbose");
 			let repodirs = [ "/etc/pkg", "/usr/local/etc/pkg/repos" ];
 			let mut repos: Vec<Repo> = Vec::new();
 			for repodir in repodirs.into_iter() {
@@ -40,7 +41,7 @@ fn main() {
 		},
 		(boh,_) => {
 			println!("command {} unknown", boh);
-			println!("{}", matches.usage());
+			println!("{}", matches.usage()); // it's not working :(
 		},
 	}
 }
