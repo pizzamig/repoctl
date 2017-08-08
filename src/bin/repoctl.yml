@@ -1,11 +1,11 @@
-# parcel command line arguments
+# repoctl command line arguments
 # yaml format
 # space indentation HAS to be 4 bytes long
-name: parcel
+name: repoctl
 # version should be somehow synced with the version in Cargo.toml
 version: "0.1.0"
 author: Luca Pizzamiglio <luca.pizzamiglio@gmail.com>
-about: FreeBSD pkg companion
+about: FreeBSD pkg repository companion
 
 args:
     - repositories:

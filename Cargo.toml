@@ -1,9 +1,9 @@
 [package]
-name = "parcel"
+name = "repoctl"
 version = "0.1.0"
 authors = ["Luca Pizzamiglio"]
 
 [dependencies]
-rusqlite = "0.11.0"
-clap = { version = "2.23.3", features = ["yaml"] }
-walkdir = "1"
+clap = { version = "2.26.0", features = ["yaml"] }
+walkdir = "1.0.7"
+ucl = { git = "https://github.com/pizzamig/ucl-rs" }
