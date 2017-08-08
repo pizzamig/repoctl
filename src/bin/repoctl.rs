@@ -12,6 +12,8 @@ fn main() {
 	let yaml = load_yaml!("repoctl.yml");
 	let matches = App::from_yaml(yaml).get_matches();
 
+	let verbosity = matches.occurrences_of("verbose");
+
 	if matches.is_present("repositories") {
 		let repodirs = [ "/etc/pkg", "/usr/local/etc/pkg/repos" ];
 		let mut repos: Vec<Repo> = Vec::new();
@@ -21,17 +23,18 @@ fn main() {
 				.filter_map( |e| e.ok())
 				.filter( |e| e.file_type().is_file())
 				.filter( |e| e.path().extension().unwrap_or( std::ffi::OsStr::new("")) == "conf" ) {
-				//println!("Parsing file: {:?}", repofile.path());
+				if verbosity > 0 {
+					println!("Parsing file: {:?}", repofile.path());
+				}
 				for r in multi_parse_filename( repofile.path() ) {
 					merge_repo( &mut repos, r);
 				}
 			}
 		}
-//		println!("{:?}", repos);
 		println!("Enabled repos:");
 		for r in repos.iter().filter(|x| x.enabled) {
-			println!("repo: {}", r.name);
-			println!("url: {}", r.url);
+			println!("\trepo: {}", r.name);
+			println!("\turl: {}", r.url);
 		}
 	}
 }
