@@ -8,11 +8,6 @@ author: Luca Pizzamiglio <luca.pizzamiglio@gmail.com>
 about: FreeBSD pkg repository companion
 
 args:
-    - repositories:
-        short: R
-        long: repositories
-        help: Checks the repositories configuration
-        takes_value: false
     - verbose:
         short: v
         long: verbose
@@ -22,3 +17,9 @@ args:
 subcommands:
     - show:
         about: shows enabled repos
+        args:
+            - verbose:
+                short: v
+                long: verbose
+                help: Increment output verbosity
+                multiple: true
