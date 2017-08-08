@@ -110,9 +110,19 @@ pub fn multi_parse_filename( filename: &Path ) -> Vec<Repo> {
 		.write( false )
 		.create( false )
 		.open( filename ) {
+		let mut line = String::new();
+		let mut entry = String::new();
 		let buf_reader = &mut BufReader::new( f );
-		for v in multi_parse_file( buf_reader ) {
-			merge_repo( &mut repos, v );
+		while let Ok(x) = buf_reader.read_line( &mut line ) {
+			if x == 0 { break ; }
+			entry += &line;
+			line.clear();
+			if entry.find('}').is_some() {
+				if let Some(x) = parse_string( entry.clone() ) {
+					merge_repo( &mut repos, x );
+					entry.clear();
+				}
+			}
 		}
 	}
 	repos
