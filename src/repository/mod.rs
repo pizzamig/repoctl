@@ -3,7 +3,7 @@ use std::fmt;
 use std::io::{BufReader, BufRead};
 use std::convert::From;
 use std::path::Path;
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -84,25 +84,6 @@ pub fn parse_string( entry : String ) -> Option<Repo> {
 	}
 }
 
-pub fn multi_parse_file( bf : &mut BufReader<File> ) -> Vec<Repo> {
-	let mut line = String::new();
-	let mut entry = String::new();
-	let mut v : Vec<Repo> = Vec::new();
-	while let Ok(x) = bf.read_line( &mut line ) {
-		if x == 0 { break; }
-		entry += &line;
-		line.clear();
-		if entry.find('}').is_some() {
-			let to_parse = entry.clone();
-			if let Some(x) = parse_string( to_parse ) {
-				merge_repo(&mut v, x);
-				entry.clear();
-			}
-		}
-	}
-	v
-}
-
 pub fn multi_parse_filename( filename: &Path ) -> Vec<Repo> {
 	let mut repos : Vec<Repo> = Vec::new();
 	if let Ok(f) = OpenOptions::new()
@@ -115,9 +96,11 @@ pub fn multi_parse_filename( filename: &Path ) -> Vec<Repo> {
 		let buf_reader = &mut BufReader::new( f );
 		while let Ok(x) = buf_reader.read_line( &mut line ) {
 			if x == 0 { break ; }
-			entry += &line;
+			let trimmed = line_trim(&line);
+			entry += &trimmed;
 			line.clear();
-			if entry.find('}').is_some() {
+			let open = entry.chars().filter(|x| *x =='{').count();
+			if open != 0 && open == entry.chars().filter(|x| *x == '}').count() {
 				if let Some(x) = parse_string( entry.clone() ) {
 					merge_repo( &mut repos, x );
 					entry.clear();
