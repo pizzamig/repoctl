@@ -18,3 +18,7 @@ args:
         long: verbose
         help: Increment output verbosity
         multiple: true
+
+subcommands:
+    - show:
+        about: shows enabled repos
