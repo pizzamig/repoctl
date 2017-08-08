@@ -4,10 +4,7 @@ extern crate walkdir;
 extern crate repoctl;
 
 use clap::App;
-use std::fs::OpenOptions;
-use std::io::BufReader;
 use walkdir::WalkDir;
-
 use repoctl::repository::*;
 
 fn main() {
@@ -24,18 +21,9 @@ fn main() {
 				.filter_map( |e| e.ok())
 				.filter( |e| e.file_type().is_file())
 				.filter( |e| e.path().extension().unwrap_or( std::ffi::OsStr::new("")) == "conf" ) {
-				let f = match OpenOptions::new()
-					.read( true )
-					.write( false )
-					.create( false )
-					.open( repofile.path() ) {
-					Err(_) => continue,
-					Ok(f) => f,
-				};
-
-				let buf_reader = &mut BufReader::new( f );
-				for v in multi_parse_file( buf_reader ) {
-					merge_repo( &mut repos, v );
+				//println!("Parsing file: {:?}", repofile.path());
+				for r in multi_parse_filename( repofile.path() ) {
+					merge_repo( &mut repos, r);
 				}
 			}
 		}
