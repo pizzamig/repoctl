@@ -23,3 +23,12 @@ subcommands:
                 long: verbose
                 help: Increment output verbosity
                 multiple: true
+        subcommands:
+            - all:
+                about: shows all repos
+                args:
+                    - verbose:
+                        short: v
+                        long: verbose
+                        help: Increment output verbosity
+                        multiple: true

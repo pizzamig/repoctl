@@ -16,7 +16,18 @@ fn main() {
 
 	match matches.subcommand() {
 		("show",Some(show_matches)) => {
+			let mut all = false;
 			verbosity += show_matches.occurrences_of("verbose");
+			match show_matches.subcommand() {
+				("all", Some(all_matches)) => {
+					all = true;
+					verbosity += all_matches.occurrences_of("verbose");
+				},
+				(boh,_) => {
+					println!("command {} unknown", boh);
+					println!("{}", show_matches.usage()); // it's not working :(
+				},
+			}
 			let repodirs = [ "/etc/pkg", "/usr/local/etc/pkg/repos" ];
 			let mut repos: Vec<Repo> = Vec::new();
 			for repodir in repodirs.into_iter() {
@@ -33,10 +44,20 @@ fn main() {
 					}
 				}
 			}
-			println!("Enabled repos:");
-			for r in repos.iter().filter(|x| x.enabled) {
-				println!("\trepo: {}", r.name);
-				println!("\turl: {}", r.url);
+			if all {
+				println!("Available repos:");
+				for r in repos.iter() {
+					println!("\trepo: {}", r.name);
+					println!("\turl: {}", r.url);
+					println!("\tenabled: {}", r.enabled);
+					println!("");
+				}
+			} else {
+				println!("Enabled repos:");
+				for r in repos.iter().filter(|x| x.enabled) {
+					println!("\trepo: {}", r.name);
+					println!("\turl: {}", r.url);
+				}
 			}
 		},
 		(boh,_) => {

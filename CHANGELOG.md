@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - verbose option
-- using ucl-rs "pizzamig" edition
+- subcommand show all, showing also disabled repos
+
+### Fixed
+- using ucl-rs "pizzamig" edition (fixed)
 
 
