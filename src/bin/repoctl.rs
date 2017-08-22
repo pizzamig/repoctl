@@ -3,14 +3,17 @@ extern crate clap;
 extern crate walkdir;
 extern crate repoctl;
 
-use clap::App;
+use clap::{App,AppSettings};
 use walkdir::WalkDir;
 use repoctl::repository::*;
 
 fn main() {
 	// Loading the arguments description & parse it
 	let yaml = load_yaml!("repoctl.yml");
-	let matches = App::from_yaml(yaml).get_matches();
+	let matches = App::from_yaml(yaml)
+			.setting(AppSettings::SubcommandRequiredElseHelp)
+			.setting(AppSettings::VersionlessSubcommands)
+			.get_matches();
 
 	let mut verbosity = matches.occurrences_of("verbose");
 
