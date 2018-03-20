@@ -7,3 +7,4 @@ authors = ["Luca Pizzamiglio"]
 clap = { version = "2.26.0", features = ["yaml"] }
 walkdir = "1.0.7"
 ucl = { git = "https://github.com/pizzamig/ucl-rs" }
+syslog = "3.3.0"
