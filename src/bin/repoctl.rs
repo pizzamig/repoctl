@@ -40,12 +40,12 @@ fn main() {
             }
             let repodirs = ["/etc/pkg", "/usr/local/etc/pkg/repos"];
             let mut repos: Vec<Repo> = Vec::new();
-            for repodir in repodirs.into_iter() {
+            for repodir in &repodirs {
                 for repofile in WalkDir::new(repodir)
                     .into_iter()
                     .filter_map(|e| e.ok())
                     .filter(|e| e.file_type().is_file())
-                    .filter(|e| e.path().extension().unwrap_or(std::ffi::OsStr::new("")) == "conf")
+                    .filter(|e| e.path().extension().unwrap_or_else(|| std::ffi::OsStr::new("")) == "conf")
                 {
                     let log_msg = format!("Parsing file: {:?}", repofile.path());
                     if verbosity > 0 {
@@ -64,11 +64,11 @@ fn main() {
             }
             if all {
                 println!("Available repos:");
-                for r in repos.iter() {
+                for r in &repos {
                     println!("\trepo: {}", r.name);
                     println!("\turl: {}", r.url);
                     println!("\tenabled: {}", r.enabled);
-                    println!("");
+                    println!();
                 }
             } else {
                 println!("Enabled repos:");
