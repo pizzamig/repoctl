@@ -3,3 +3,7 @@
 repoctl would be a FreeBSD package repository management helper, written in Rust.
 
 It's my first project in rust, so instability, a lot of rewrites and code ugliness is expected
+
+## Requirements
+ 
+* autotools

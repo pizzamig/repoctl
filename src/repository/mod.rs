@@ -1,14 +1,28 @@
-extern crate ucl;
 use std::fmt;
 use std::io::{BufRead, BufReader};
 use std::convert::From;
 use std::path::Path;
 use std::fs::OpenOptions;
+use url::{Url, ParseError};
+use ucl;
+
+#[derive(PartialEq, Debug)]
+pub enum MyError {
+    URLError(ParseError),
+    UCIError,
+    NameError,
+}
+
+impl From<ParseError> for MyError {
+    fn from(e: ParseError) -> MyError {
+        MyError::URLError(e)
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Repo {
     pub name: String,
-    pub url: String,
+    pub url: Option<Url>,
     pub enabled: bool,
 }
 
@@ -16,15 +30,19 @@ impl Repo {
     pub fn new() -> Repo {
         Repo {
             name: String::new(),
-            url: String::new(),
-            enabled: false,
+            url: None,
+            enabled: true,
         }
     }
 }
 
 impl fmt::Display for Repo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} [enabled:{}]", self.name, self.enabled)
+        let url_section = match self.url {
+            Some(ref url) => format!("url:{}", url),
+            _ => "".to_string(),
+        };
+        write!(f, "{} [enabled:{}{}]", self.name, self.enabled, url_section)
     }
 }
 
@@ -60,7 +78,7 @@ fn get_section_name(st: &str) -> Option<String> {
 }
 
 /// it parses one repository description
-pub fn parse_string(entry: String) -> Option<Repo> {
+pub fn parse_string(entry: String) -> Result<Repo, MyError> {
     let trimmed = entry
         .lines()
         .map(line_trim)
@@ -69,14 +87,15 @@ pub fn parse_string(entry: String) -> Option<Repo> {
     if let Some(name) = get_section_name(trimmed.as_ref()) {
         r.name = name;
     } else {
-        return None;
+        return Err(MyError::NameError);
+        return Err(MyError::NameError);
     }
     let parsy = ucl::Parser::new();
     if let Ok(config) = parsy.parse(trimmed) {
         let url_path = r.name.clone() + ".url";
         if let Some(url_obj) = config.fetch_path(url_path) {
             if let Some(url) = url_obj.as_string() {
-                r.url = url;
+                r.url = Some(Url::parse(&url)?);
             }
         }
         if let Some(enabled_obj) = config.fetch_path(r.name.clone() + ".enabled") {
@@ -84,9 +103,9 @@ pub fn parse_string(entry: String) -> Option<Repo> {
                 r.enabled = enabled;
             }
         }
-        Some(r)
+        Ok(r)
     } else {
-        None
+        Err(MyError::UCIError)
     }
 }
 
@@ -110,7 +129,7 @@ pub fn multi_parse_filename(filename: &Path) -> Vec<Repo> {
             line.clear();
             let open = entry.chars().filter(|x| *x == '{').count();
             if open != 0 && open == entry.chars().filter(|x| *x == '}').count() {
-                if let Some(x) = parse_string(entry.clone()) {
+                if let Ok(x) = parse_string(entry.clone()) {
                     merge_repo(&mut repos, x);
                     entry.clear();
                 }
@@ -124,8 +143,8 @@ pub fn multi_parse_filename(filename: &Path) -> Vec<Repo> {
 impl From<String> for Repo {
     fn from(s: String) -> Repo {
         match parse_string(s) {
-            Some(x) => x,
-            None => Repo::new(),
+            Ok(x) => x,
+            _ => Repo::new(),
         }
     }
 }
@@ -133,7 +152,7 @@ impl From<String> for Repo {
 pub fn merge_repo(v: &mut Vec<Repo>, r: Repo) {
     if let Some(x) = v.iter().position(|z| z.name == r.name) {
         v[x].enabled = r.enabled;
-        if !r.url.is_empty() {
+        if r.url.is_some() {
             v[x].url = r.url;
         }
     } else {
@@ -149,8 +168,8 @@ mod tests {
     fn test_repo_new() {
         let r = Repo::new();
         assert_eq!(r.name, String::new());
-        assert_eq!(r.url, String::new());
-        assert!(!r.enabled);
+        assert_eq!(r.url, None);
+        assert!(r.enabled);
     }
     #[test]
     fn test_line_trim() {
@@ -171,43 +190,44 @@ mod tests {
     fn test_parse_string() {
         let ft: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "".to_string(),
+            url: None,
             enabled: true,
         };
         let fut: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "http://pkg.bsd".to_string(),
+            url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: true,
         };
         let ff: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "".to_string(),
-            enabled: false,
+            url: None,
+            enabled: true,
         };
         let fuf: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "http://pkg.bsd".to_string(),
-            enabled: false,
+            url: Some(Url::parse("http://pkg.bsd").unwrap()),
+            enabled: true,
         };
         let fuf2: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "http://pkg.bsd".to_string(),
+            url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: false,
         };
-        assert_eq!(None, parse_string("".to_string()));
-        assert_eq!(Some(ff), parse_string("FreeBSD:{}".to_string()));
-        assert_eq!(Some(ft), parse_string("FreeBSD:{enabled:yes}".to_string()));
+        assert_eq!(Err(MyError::NameError), parse_string("".to_string()));
+        assert_eq!(Ok(ff), parse_string("FreeBSD:{}".to_string()));
+        assert_eq!(Ok(ft), parse_string("FreeBSD:{enabled:yes}".to_string()));
         assert_eq!(
-            Some(fut),
+            Ok(fut),
             parse_string("FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string())
         );
         assert_eq!(
-            Some(fuf),
-            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string())
+            fuf,
+            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string()).unwrap_or(Repo::new())
         );
         assert_eq!(
-            Some(fuf2),
+            fuf2,
             parse_string("#\nFreeBSD:{\nenabled:NO,url:\"http://pkg.bsd\"}".to_string())
+                .unwrap_or(Repo::new())
         );
     }
 
@@ -215,27 +235,27 @@ mod tests {
     fn test_from_1() {
         let ft: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "".to_string(),
+            url: None,
             enabled: true,
         };
         let fut: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "http://pkg.bsd".to_string(),
+            url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: true,
         };
         let ff: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "".to_string(),
-            enabled: false,
+            url: None,
+            enabled: true,
         };
         let fuf: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "http://pkg.bsd".to_string(),
+            url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: false,
         };
         let fuf2: Repo = Repo {
             name: "FreeBSD".to_string(),
-            url: "http://pkg.bsd".to_string(),
+            url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: false,
         };
         assert_eq!(Repo::new(), Repo::from(String::new()));
@@ -259,8 +279,8 @@ mod tests {
     fn test_merge_repo_1() {
         let mut repos: Vec<Repo> = Vec::new();
         let fb = "FreeBSD".to_string();
-        let u = "http://10.1.3.69/103x64/libressl".to_string();
-        let u2 = "http://10.1.3.69/103x64/default".to_string();
+        let u = Some(Url::parse("http://10.1.3.69/103x64/libressl").unwrap());
+        let u2 = Some(Url::parse("http://10.1.3.69/103x64/default").unwrap());
         merge_repo(
             &mut repos,
             Repo {
@@ -324,7 +344,7 @@ mod tests {
             &mut repos,
             Repo {
                 name: "drmnext".to_string(),
-                url: "".to_string(),
+                url: None,
                 enabled: false,
             },
         );
