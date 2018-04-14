@@ -3,19 +3,19 @@ use std::io::{BufRead, BufReader};
 use std::convert::From;
 use std::path::Path;
 use std::fs::OpenOptions;
-use url::{Url, ParseError};
+use url::{ParseError, Url};
 use ucl;
 
 #[derive(PartialEq, Debug)]
-pub enum MyError {
+pub enum RepoError {
     URLError(ParseError),
     UCIError,
     NameError,
 }
 
-impl From<ParseError> for MyError {
-    fn from(e: ParseError) -> MyError {
-        MyError::URLError(e)
+impl From<ParseError> for RepoError {
+    fn from(e: ParseError) -> RepoError {
+        RepoError::URLError(e)
     }
 }
 
@@ -78,7 +78,7 @@ fn get_section_name(st: &str) -> Option<String> {
 }
 
 /// it parses one repository description
-pub fn parse_string(entry: String) -> Result<Repo, MyError> {
+pub fn parse_string(entry: String) -> Result<Repo, RepoError> {
     let trimmed = entry
         .lines()
         .map(line_trim)
@@ -87,8 +87,7 @@ pub fn parse_string(entry: String) -> Result<Repo, MyError> {
     if let Some(name) = get_section_name(trimmed.as_ref()) {
         r.name = name;
     } else {
-        return Err(MyError::NameError);
-        return Err(MyError::NameError);
+        return Err(RepoError::NameError);
     }
     let parsy = ucl::Parser::new();
     if let Ok(config) = parsy.parse(trimmed) {
@@ -105,7 +104,7 @@ pub fn parse_string(entry: String) -> Result<Repo, MyError> {
         }
         Ok(r)
     } else {
-        Err(MyError::UCIError)
+        Err(RepoError::UCIError)
     }
 }
 
@@ -213,7 +212,7 @@ mod tests {
             url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: false,
         };
-        assert_eq!(Err(MyError::NameError), parse_string("".to_string()));
+        assert_eq!(Err(RepoError::NameError), parse_string("".to_string()));
         assert_eq!(Ok(ff), parse_string("FreeBSD:{}".to_string()));
         assert_eq!(Ok(ft), parse_string("FreeBSD:{enabled:yes}".to_string()));
         assert_eq!(
