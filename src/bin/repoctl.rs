@@ -65,16 +65,12 @@ fn main() {
             if all {
                 println!("Available repos:");
                 for r in &repos {
-                    println!("\trepo: {}", r.name);
-                    println!("\turl: {}", r.url);
-                    println!("\tenabled: {}", r.enabled);
-                    println!();
+                    println!("{}", r);
                 }
             } else {
                 println!("Enabled repos:");
                 for r in repos.iter().filter(|x| x.enabled) {
-                    println!("\trepo: {}", r.name);
-                    println!("\turl: {}", r.url);
+                    println!("{}", r);
                 }
             }
         }
