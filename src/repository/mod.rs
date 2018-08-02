@@ -1,10 +1,10 @@
-use std::fmt;
-use std::io::{BufRead, BufReader};
 use std::convert::From;
-use std::path::Path;
+use std::fmt;
 use std::fs::OpenOptions;
-use url::{ParseError, Url};
+use std::io::{BufRead, BufReader};
+use std::path::Path;
 use ucl;
+use url::{ParseError, Url};
 
 #[derive(PartialEq, Debug)]
 pub enum RepoError {
@@ -42,7 +42,11 @@ impl fmt::Display for Repo {
             Some(ref url) => format!("url:{}", url),
             _ => "".to_string(),
         };
-        write!(f, "{} [enabled:{}{}]", self.name, self.enabled, url_section)
+        write!(
+            f,
+            "{} [enabled:{} {}]",
+            self.name, self.enabled, url_section
+        )
     }
 }
 
