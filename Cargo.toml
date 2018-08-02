@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Luca Pizzamiglio"]
 
 [dependencies]
-clap = { version = "2.26.0", features = ["yaml"] }
+structopt = "0.2"
 walkdir = "1.0.7"
 ucl = { git = "https://github.com/pizzamig/ucl-rs" }
 syslog = "3.3.0"

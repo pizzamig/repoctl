@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - verbose option
-- subcommand show all, showing also disabled repos
+- show: show all repos, enabled and disabled
 
 ### Fixed
 - using ucl-rs "pizzamig" edition (fixed)
 
-
+### Changed
+- Moved from clap to structopt
