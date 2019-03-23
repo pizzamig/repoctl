@@ -1,5 +1,5 @@
-extern crate structopt;
 extern crate repoctl;
+extern crate structopt;
 extern crate syslog;
 extern crate walkdir;
 
@@ -41,7 +41,8 @@ fn main() {
                             .extension()
                             .unwrap_or_else(|| std::ffi::OsStr::new(""))
                             == "conf"
-                    }) {
+                    })
+                {
                     println!("Parsing file: {:?}", repofile.path());
                     for r in multi_parse_filename(repofile.path()) {
                         merge_repo(&mut repos, r);

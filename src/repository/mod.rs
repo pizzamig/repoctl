@@ -213,15 +213,22 @@ mod tests {
             enabled: false,
         };
         assert_eq!(Err(RepoError::NameError), parse_string("".to_string()));
-        assert_eq!(Ok(no_url_enabled.clone()), parse_string("FreeBSD:{}".to_string()));
-        assert_eq!(Ok(no_url_enabled.clone()), parse_string("FreeBSD:{enabled:yes}".to_string()));
+        assert_eq!(
+            Ok(no_url_enabled.clone()),
+            parse_string("FreeBSD:{}".to_string())
+        );
+        assert_eq!(
+            Ok(no_url_enabled.clone()),
+            parse_string("FreeBSD:{enabled:yes}".to_string())
+        );
         assert_eq!(
             Ok(url_enabled.clone()),
             parse_string("FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string())
         );
         assert_eq!(
             url_enabled.clone(),
-            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string()).unwrap_or_else(|_| Repo::new())
+            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string())
+                .unwrap_or_else(|_| Repo::new())
         );
         assert_eq!(
             url_disabled,
