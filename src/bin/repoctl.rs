@@ -34,7 +34,7 @@ fn main() {
             for repodir in &repodirs {
                 for repofile in WalkDir::new(repodir)
                     .into_iter()
-                    .filter_map(|e| e.ok())
+                    .filter_map(std::result::Result::ok)
                     .filter(|e| e.file_type().is_file())
                     .filter(|e| {
                         e.path()

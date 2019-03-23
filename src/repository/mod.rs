@@ -28,6 +28,12 @@ pub struct Repo {
 
 impl Repo {
     pub fn new() -> Repo {
+        Default::default()
+    }
+}
+
+impl Default for Repo {
+    fn default() -> Self {
         Repo {
             name: String::new(),
             url: None,
@@ -225,12 +231,12 @@ mod tests {
         );
         assert_eq!(
             fuf,
-            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string()).unwrap_or(Repo::new())
+            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string()).unwrap_or_else(|_| Repo::new())
         );
         assert_eq!(
             fuf2,
             parse_string("#\nFreeBSD:{\nenabled:NO,url:\"http://pkg.bsd\"}".to_string())
-                .unwrap_or(Repo::new())
+                .unwrap_or_else(|_| Repo::new())
         );
     }
 
