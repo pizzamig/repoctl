@@ -1,6 +1,5 @@
-#[macro_use]
-extern crate structopt;
 extern crate repoctl;
+extern crate structopt;
 extern crate syslog;
 extern crate walkdir;
 
@@ -35,14 +34,15 @@ fn main() {
             for repodir in &repodirs {
                 for repofile in WalkDir::new(repodir)
                     .into_iter()
-                    .filter_map(|e| e.ok())
+                    .filter_map(std::result::Result::ok)
                     .filter(|e| e.file_type().is_file())
                     .filter(|e| {
                         e.path()
                             .extension()
                             .unwrap_or_else(|| std::ffi::OsStr::new(""))
                             == "conf"
-                    }) {
+                    })
+                {
                     println!("Parsing file: {:?}", repofile.path());
                     for r in multi_parse_filename(repofile.path()) {
                         merge_repo(&mut repos, r);

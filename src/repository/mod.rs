@@ -19,7 +19,7 @@ impl From<ParseError> for RepoError {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Repo {
     pub name: String,
     pub url: Option<Url>,
@@ -28,6 +28,12 @@ pub struct Repo {
 
 impl Repo {
     pub fn new() -> Repo {
+        Default::default()
+    }
+}
+
+impl Default for Repo {
+    fn default() -> Self {
         Repo {
             name: String::new(),
             url: None,
@@ -191,46 +197,43 @@ mod tests {
 
     #[test]
     fn test_parse_string() {
-        let ft: Repo = Repo {
+        let no_url_enabled: Repo = Repo {
             name: "FreeBSD".to_string(),
             url: None,
             enabled: true,
         };
-        let fut: Repo = Repo {
+        let url_enabled: Repo = Repo {
             name: "FreeBSD".to_string(),
             url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: true,
         };
-        let ff: Repo = Repo {
-            name: "FreeBSD".to_string(),
-            url: None,
-            enabled: true,
-        };
-        let fuf: Repo = Repo {
-            name: "FreeBSD".to_string(),
-            url: Some(Url::parse("http://pkg.bsd").unwrap()),
-            enabled: true,
-        };
-        let fuf2: Repo = Repo {
+        let url_disabled: Repo = Repo {
             name: "FreeBSD".to_string(),
             url: Some(Url::parse("http://pkg.bsd").unwrap()),
             enabled: false,
         };
         assert_eq!(Err(RepoError::NameError), parse_string("".to_string()));
-        assert_eq!(Ok(ff), parse_string("FreeBSD:{}".to_string()));
-        assert_eq!(Ok(ft), parse_string("FreeBSD:{enabled:yes}".to_string()));
         assert_eq!(
-            Ok(fut),
+            Ok(no_url_enabled.clone()),
+            parse_string("FreeBSD:{}".to_string())
+        );
+        assert_eq!(
+            Ok(no_url_enabled.clone()),
+            parse_string("FreeBSD:{enabled:yes}".to_string())
+        );
+        assert_eq!(
+            Ok(url_enabled.clone()),
             parse_string("FreeBSD:{enabled:yes,url:\"http://pkg.bsd\"}".to_string())
         );
         assert_eq!(
-            fuf,
-            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string()).unwrap_or(Repo::new())
+            url_enabled.clone(),
+            parse_string("FreeBSD:{url:\"http://pkg.bsd\"}".to_string())
+                .unwrap_or_else(|_| Repo::new())
         );
         assert_eq!(
-            fuf2,
+            url_disabled,
             parse_string("#\nFreeBSD:{\nenabled:NO,url:\"http://pkg.bsd\"}".to_string())
-                .unwrap_or(Repo::new())
+                .unwrap_or_else(|_| Repo::new())
         );
     }
 
